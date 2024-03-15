@@ -220,26 +220,60 @@
 ###############################################################################################
 # 上面两种写法的代码重复度还是很高，所以采用通用类视图接口来处理
 
+# 通用类视图接口
+# import rest_framework.generics as g
+#
+# from .models import Course
+# from .serializer import CourseSerializer
+#
+# """
+# 三: 通用类视图接口
+# """
+#
+#
+# # 通用类视图接口：如其名，已经实现了一些增删改查的基本方法，只需继承类然后就可以了
+# # ListCreateView
+# # DestroyAPIView -> 删除信息的接口
+# # ListAPIView -> 列出信息
+# # CreateAPIView -> 增加信息
+# # UpdateAPIView -> 更新信息
+# # 当然也有一些混合的方法，比如下面这种
+# class GCourseList(g.ListCreateAPIView):
+#     # 因为已经实现了增删改查的功能，所以在这里只写属性就可以了
+#     # 这两个字段的名字是固定的
+#     queryset = Course.objects.all()
+#     serializer_class = CourseSerializer
+#
+#     # 但是teacher字段需要自己指定，所以要重写一个方法
+#     def perform_create(self, serializer):
+#         serializer.save(teacher=self.request.user)
+#
+#
+# # 课程详情的接口
+# class GCourseDetail(g.RetrieveUpdateDestroyAPIView):
+#     queryset = Course.objects.all()
+#     serializer_class = CourseSerializer
+#     lookup_field = 'id'
+
+###############################################################################################
+
+# DRF ViewSet 增删改查操作
+# 从前面的例子来看，CourseList和CourseDetail这几种操作，总是会分开进行操作，那么可以一起进行吗？ViewSet就是完成这件任务的
+"""
+四：ViewSet CRUD操作
+"""
+from rest_framework.viewsets import ModelViewSet
+from .models import Course
+from .serializer import CourseSerializer
 
 
+# 视图集的路由写法和之前的三种url不一样，需要用路由的写法
+class CourseViewSet(ModelViewSet):
+    # 通过观看ModelViewSet的源码，其继承链GenericViewSet -> VewSetMiXin中实现了四种操作，所以这种ViewSet就可以将四种操作写到一起去
+    # 如果代码中没有权限、认证、限流等等其他操作，总共的代码就四行
+    queryset = Course.objects.all()
+    serializer_class = CourseSerializer
+    lookup_field = 'id'
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    def perform_create(self, serializer):
+        serializer.save(teacher=self.request.user)

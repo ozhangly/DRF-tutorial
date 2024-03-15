@@ -144,7 +144,7 @@ REST_FRAMEWORK = {
         'rest_framework.renders.BrowsableAPIRenderer'
     ],
     'DEFAULT_PERMISSION_CLASSES': [         # 配置权限控制
-        'rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly'
+        'rest_framework.permissions.IsAuthenticated'
     ],
     'DEFAULT_PARSER_CLASSES': [             # 配置解析器，用来解析request.data中的数据
         'rest_framework.parsers.JSONParser',
@@ -152,8 +152,29 @@ REST_FRAMEWORK = {
         'rest_framework.parsers.MultiPartParser'
     ],
     'DEFAULT_AUTHENTICATION_CLASSES': [     # 配置验证器，但是只有TokenAuthentication需要在INSTALL APPS中配置，而且还不是在中间件中配置, 好奇怪
+        # 三种认证方式: 分别是  账户密码认证、session认证、token认证
         'rest_framework.authentication.BasicAuthentication',
         'rest_framework.authentication.SessionAuthentication',
         'rest_framework.authentication.TokenAuthentication'
+
+        # 区分一下认证和权限的区别
+        # 认证指的是 对登陆的用户身份进行校验，确认身份。
+        # 权限指的是 对认证通过的用户，它能通过访问哪些接口，或者是对于同一接口能拿到什么级别的数据
+        # 然后说一下，在DRF中，认证的执行级别是最高的，在权限确认之前。
+        # 认证除了DRF提供的这3种，还可以使用第三方提供的认证方式，比如JWT等。。。
+        # 但是要进阶课才能看了，也不知道哪门进阶课。。。
     ]
 }
+# 对于DRF的认证和权限，需要理解的是 核心依赖的是两个数据
+# 分别是 request.user 和 request.auth 这两个数据
+# 认证机制依赖的是 django中的auth框架
+# from django.contrib import auth
+
+# DRF认证   会从 DEFAULT_AUTHENTICATION_CLASSES 中按照设置的顺序进行验证，并且通过了一个验证，那么后续的验证就不再进行了
+# BasicAuthentication: 对username和password进行联合base64编码，然后放在request头中，Authentication: 编码  一般只用在测试环境，生产环境不用
+# BasicAuthentication 在验证通过后 会将 request.user 设置为 django.contrib.auth.models.User实例，而request.auth 会设置为空
+# 在认证失败后会在响应头加上 www-authentication-base realms api这个键值对 (虽然不知道为什么，但还是记下来了)
+
+# SessionAuthentication 一般是在前端使用ajax请求时使用的，这种认证方式一般会在请求中带有csrf的验证。
+# 如果验证失败了会返回403 forbidden，不会在响应中带东西
+

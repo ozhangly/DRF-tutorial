@@ -32,13 +32,13 @@ class CourseSerializer(ModelSerializer):
 
     class Meta:
         model = Course          # 写法上和CourseForm一致
-        exclude = ('id', )
+        # exclude = ('id', )
         fields = ('name', 'introduction', 'price', 'teacher')
         # 或者也可以这么写
         # fields = '__all__'      # 这样的话就是所有字段都序列化
         # 这个depth指的是外键关联的深度，比如teacher关联的是User表，那么如果user表中的属性也关联了其他表，那么那个表也能关联出来
         # 这里有一个问题，那在第二个关联的外键中的参考字段是不是也要写出来呢？像这个的teacher一样
-        depth = 2
+        # depth = 2
 
 
 # 如果响应数据中带有url的数据，应该怎么反序列化呢？

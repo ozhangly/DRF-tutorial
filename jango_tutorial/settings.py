@@ -135,6 +135,7 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # rest framework的全局配置, 在一个字典中
 REST_FRAMEWORK = {
+    'DEFAULT_SCHEMA_CLASS': 'rest_framework.schemas.coreapi.AutoSchema',
     'URL_FIELD_NAME': 'url',
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
     'PAGE_SIZE': 50,        # 配置每个分页中数量的多少

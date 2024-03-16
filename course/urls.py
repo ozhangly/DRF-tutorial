@@ -5,14 +5,14 @@ from rest_framework.routers import DefaultRouter
 import course.views
 
 # 实例化路由器
-router = DefaultRouter()
-# 将视图集注册到路由器中
-router.register(prefix='courseinfo', viewset=course.views.CourseViewSet)
+# router = DefaultRouter()
+# # 将视图集注册到路由器中
+# router.register(prefix='courseinfo', viewset=course.views.CourseViewSet)
 
 urlpatterns = [
     # 函数式视图
-    # path('courselist/', course.views.courselist, name='fbv list'),
-    # path('course_detail/<int:id>', course.views.course_detail, name='course detail')
+    path('courselist/', course.views.course_list, name='fbv list'),
+    path('course_detail/<int:id>', course.views.course_detail, name='course detail')
 
     # 类视图 Class Based View
     # 这里因为继承的是APIView，所以要使用as_view方法
@@ -44,5 +44,5 @@ urlpatterns = [
     # ), name='GBVS')
 
     # 这么写还是太麻烦，有更简单的方法
-    path("", include(router.urls))      # 太牛了。。。
+    # path("", include(router.urls))      # 太牛了。。。
 ]

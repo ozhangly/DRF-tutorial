@@ -16,9 +16,16 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from rest_framework.authtoken import views
+from rest_framework.documentation import get_schema_view
+from rest_framework.documentation import include_docs_urls
+
 
 urlpatterns = [
     path("admin/", admin.site.urls),
+    path("api-authtoken/", views.obtain_auth_token),         # 获取token的接口
     path("api-auth/", include('rest_framework.urls', namespace='login and logout')),        # DRF的登陆退出
+    path("api_schema/", include_docs_urls(title='drf api', description='xxx')),
+
     path('course/', include(('course.urls', 'course route'), namespace='course'))
 ]

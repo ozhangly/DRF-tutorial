@@ -53,14 +53,17 @@
 
 # DRF视图开发的函数式编程:
 import rest_framework.status as status
+import rest_framework.generics as g
+
 from django.db.models.signals import post_save      # 在save方法调用后触发信号
 from django.conf import settings
 from django.dispatch.dispatcher import receiver
 
-from rest_framework.authentication import TokenAuthentication
+from rest_framework.authentication import TokenAuthentication, BasicAuthentication
 from rest_framework.decorators import authentication_classes, permission_classes        # 实现对象级别控制的装饰器
 from rest_framework.authtoken.models import Token   # 导入authtoken_token对应的模型类
 from rest_framework.decorators import api_view
+from rest_framework.views import APIView
 from rest_framework.response import Response
 
 from .models import Course
@@ -173,127 +176,124 @@ def course_detail(request, id):
 ###############################################################################################
 
 # DRF 类视图接口
-# import rest_framework.status as status
-#
-# from rest_framework.views import APIView
-# from .models import Course
-# from .serializer import CourseSerializer
-# from rest_framework.response import Response
-#
-#
-# """类视图"""
-# class CourseList(APIView):
-#
-#     # 在类视图中，可以使用authentication_classes = (BasicAuthentication, ....), 其他方法也一样
-#     # 通过使用permission_classes = (IsAuthenticated, ....)     实现类视图或者通用类视图或者视图集的权限控制
-#
-#     def get(self, request):
-#         course_list = Course.objects.all()
-#         serializer = CourseSerializer(instance=course_list, many=True)
-#         return Response(data=serializer.data, status=status.HTTP_200_OK)
-#
-#     def post(self, request):
-#         # 这里就由我来写
-#         # 创建序列化器。这个request.data 的数据就是在postman中的request的body中的raw格式的json对象
-#         # 注意，在类视图编写过程中，最好写成 self.request.XXX, 这里APIView类中封装好了self.request和self.response
-#         serializer = CourseSerializer(data=self.request.data, partial=True)
-#
-#         if serializer.is_valid():
-#             serializer.save(teacher=self.request.user)
-#             print('request.data format: ' + type(self.request.data))
-#             print('serializer.data format: ' + type(serializer.data))
-#             return Response(data=serializer.data, status=status.HTTP_201_CREATED)
-#         return Response(data=serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+"""类视图"""
+class CourseList(APIView):
+
+    authentication_classes = (BasicAuthentication, )
+    permission_classes = (IsOwnerReadOnly, )
+    # 在类视图中，可以使用authentication_classes = (BasicAuthentication, ....), 其他方法也一样
+    # 通过使用permission_classes = (IsAuthenticated, ....)     实现类视图或者通用类视图或者视图集的权限控制
+
+    def get(self, request):
+        course_list = Course.objects.all()
+        serializer = CourseSerializer(instance=course_list, many=True)
+        return Response(data=serializer.data, status=status.HTTP_200_OK)
+
+    def post(self, request):
+        # 这里就由我来写
+        # 创建序列化器。这个request.data 的数据就是在postman中的request的body中的raw格式的json对象
+        # 注意，在类视图编写过程中，最好写成 self.request.XXX, 这里APIView类中封装好了self.request和self.response
+        serializer = CourseSerializer(data=self.request.data, partial=True)
+
+        if serializer.is_valid():
+            serializer.save(teacher=self.request.user)
+            print('request.data format: ' + type(self.request.data))
+            print('serializer.data format: ' + type(serializer.data))
+            return Response(data=serializer.data, status=status.HTTP_201_CREATED)
+        return Response(data=serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 # 课程详情信息
-# class CourseDetail(APIView):
-#
-#     authentication_class = (TokenAuthentication, ...)
-#     # 通过使用permission_classes = (IsAuthenticated, ....)     实现类视图或者通用类视图或者视图集的权限控制
-#
-#     def get_object(self, id):
-#         return Course.objects.get(pk=id)
-#
-#     def get(self, request, id):
-#         try:
-#             course_detail = self.get_object(id)
-#         except Course.DoesNotExist:
-#             return Response(data={'msg': '没有课程信息'}, status=status.HTTP_400_BAD_REQUEST)
-#         serializer = CourseSerializer(instance=course_detail, many=False)
-#         return Response(data=serializer.data, status=status.HTTP_200_OK)
-#
-#     def post(self, request, id):
-#         try:
-#             course_detail = Course.objects.get(pk=id)
-#         except Course.DoesNotExist:
-#             return Response(data={'msg': '没有此课程信息'}, status=status.HTTP_400_BAD_REQUEST)
-#         serializer = CourseSerializer(data=self.request.data, partial=True)
-#         if serializer.is_valid():
-#             serializer.save(teacher=self.request.user)
-#             return Response(data=serializer.data, status=status.HTTP_201_CREATED)
-#         return Response(data=serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-#
-#     def put(self, request, id):
-#         try:
-#             course_detail = self.get_object(id)
-#         except Course.DoesNotExist:
-#             return Response(data={'msg': '没有此课程信息'}, status=status.HTTP_400_BAD_REQUEST)
-#         serializer = CourseSerializer(instance=course_detail, data=self.request.data)
-#         if serializer.is_valid():
-#             serializer.save()
-#             return Response(data=serializer.data, status=status.HTTP_200_OK)
-#         return Response(data=serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-#
-#     def delete(self, request, id):
-#         try:
-#             course_detail = self.get_object(id)
-#         except Course.DoesNotExist:
-#             return Response(data={'msg': '没有此课程信息'}, status=status.HTTP_400_BAD_REQUEST)
-#
-#         course_detail.delete()
-#         return Response(status=status.HTTP_204_NO_CONTENT)
+class CourseDetail(APIView):
+
+    authentication_class = (TokenAuthentication, )
+    permission_classes = (IsOwnerReadOnly, )
+    # 通过使用permission_classes = (IsAuthenticated, ....)     实现类视图或者通用类视图或者视图集的权限控制
+
+    @staticmethod
+    def get_object(id):
+        return Course.objects.get(pk=id)
+
+    def get(self, request, id):
+        try:
+            course_detail = self.get_object(id)
+        except Course.DoesNotExist:
+            return Response(data={'msg': '没有课程信息'}, status=status.HTTP_400_BAD_REQUEST)
+        serializer = CourseSerializer(instance=course_detail, many=False)
+        return Response(data=serializer.data, status=status.HTTP_200_OK)
+
+    def post(self, request, id):
+        try:
+            course_detail = Course.objects.get(pk=id)
+        except Course.DoesNotExist:
+            return Response(data={'msg': '没有此课程信息'}, status=status.HTTP_400_BAD_REQUEST)
+        serializer = CourseSerializer(data=self.request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save(teacher=self.request.user)
+            return Response(data=serializer.data, status=status.HTTP_201_CREATED)
+        return Response(data=serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def put(self, request, id):
+        try:
+            course_detail = self.get_object(id)
+        except Course.DoesNotExist:
+            return Response(data={'msg': '没有此课程信息'}, status=status.HTTP_400_BAD_REQUEST)
+        serializer = CourseSerializer(instance=course_detail, data=self.request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(data=serializer.data, status=status.HTTP_200_OK)
+        return Response(data=serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, id):
+        try:
+            course_detail = self.get_object(id)
+        except Course.DoesNotExist:
+            return Response(data={'msg': '没有此课程信息'}, status=status.HTTP_400_BAD_REQUEST)
+
+        course_detail.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 ###############################################################################################
 # 上面两种写法的代码重复度还是很高，所以采用通用类视图接口来处理
 
 # 通用类视图接口
-# import rest_framework.generics as g
-#
-# from .models import Course
-# from .serializer import CourseSerializer
-#
-# """
-# 三: 通用类视图接口
-# """
-#
-#
-# # 通用类视图接口：如其名，已经实现了一些增删改查的基本方法，只需继承类然后就可以了
-# # ListCreateView
-# # DestroyAPIView -> 删除信息的接口
-# # ListAPIView -> 列出信息
-# # CreateAPIView -> 增加信息
-# # UpdateAPIView -> 更新信息
-# # 当然也有一些混合的方法，比如下面这种
-# class GCourseList(g.ListCreateAPIView):
-#     authentication_class = (TokenAuthentication, ...)
-#     # 通过使用permission_classes = (IsAuthenticated, ....)     实现类视图或者通用类视图或者视图集的权限控制
-#     # 因为已经实现了增删改查的功能，所以在这里只写属性就可以了
-#     # 这两个字段的名字是固定的
-#     queryset = Course.objects.all()
-#     serializer_class = CourseSerializer
-#
-#     # 但是teacher字段需要自己指定，所以要重写一个方法
-#     def perform_create(self, serializer):
-#         serializer.save(teacher=self.request.user)
-#
-#
-# # 课程详情的接口
-# class GCourseDetail(g.RetrieveUpdateDestroyAPIView):
-#     authentication_class = (TokenAuthentication, ...)
-#     queryset = Course.objects.all()
-#     serializer_class = CourseSerializer
-#     lookup_field = 'id'
+import rest_framework.generics as g
+
+from .models import Course
+from .serializer import CourseSerializer
+
+"""
+三: 通用类视图接口
+"""
+
+
+# 通用类视图接口：如其名，已经实现了一些增删改查的基本方法，只需继承类然后就可以了
+# ListCreateView
+# DestroyAPIView -> 删除信息的接口
+# ListAPIView -> 列出信息
+# CreateAPIView -> 增加信息
+# UpdateAPIView -> 更新信息
+# 当然也有一些混合的方法，比如下面这种
+class GCourseList(g.ListCreateAPIView):
+    authentication_class = (BasicAuthentication, )
+    # 通过使用permission_classes = (IsAuthenticated, ....)     实现类视图或者通用类视图或者视图集的权限控制
+    # 因为已经实现了增删改查的功能，所以在这里只写属性就可以了
+    # 这两个字段的名字是固定的
+    queryset = Course.objects.all()
+    serializer_class = CourseSerializer
+
+    # 但是teacher字段需要自己指定，所以要重写一个方法
+    def perform_create(self, serializer):
+        serializer.save(teacher=self.request.user)
+
+
+# 课程详情的接口
+class GCourseDetail(g.RetrieveUpdateDestroyAPIView):
+    authentication_class = (TokenAuthentication, ...)
+    queryset = Course.objects.all()
+    serializer_class = CourseSerializer
+    lookup_field = 'id'
 
 ###############################################################################################
 

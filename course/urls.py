@@ -1,5 +1,5 @@
 
-from django.urls import path, include
+from django.urls import path, include, re_path
 from rest_framework.routers import DefaultRouter
 
 import course.views
@@ -11,8 +11,15 @@ import course.views
 
 urlpatterns = [
     # 函数式视图
-    path('courselist/', course.views.course_list, name='fbv list'),
-    path('course_detail/<int:id>', course.views.course_detail, name='course detail')
+    path('fbv/courselist/', course.views.course_list, name='fbv list'),
+    path('fbv/course_detail/<int:id>', course.views.course_detail, name='course detail'),
+
+    # DRF 类视图路由
+    path('cbv/courselist/', course.views.CourseList.as_view()),
+    re_path(r'^cbv/coursedetail/(?P<id>\d)/$', course.views.CourseDetail.as_view()),
+
+    # DRF 通用类视图
+
 
     # 类视图 Class Based View
     # 这里因为继承的是APIView，所以要使用as_view方法

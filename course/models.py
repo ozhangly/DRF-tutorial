@@ -17,6 +17,7 @@ class Course(models.Model):
 
     # 元信息
     class Meta:
+        db_table = 't_course'         # 指定在数据库中的表名
         verbose_name = '课程信息'
         verbose_name_plural = verbose_name
         ordering = ['price', ]
